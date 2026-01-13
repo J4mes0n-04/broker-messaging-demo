@@ -1,0 +1,39 @@
+sequenceDiagram
+    participant Client as Client Application
+    participant SchemaRegistry as Schema Registry<br/>(Port: 8081)
+    participant Kafka as Kafka Broker<br/>(Port: 9092)
+    participant Zookeeper as Zookeeper<br/>(Port: 2181)
+
+    Note over Client,Zookeeper: System Architecture & Initialization
+
+    rect rgb(230, 240, 250)
+    Note over Zookeeper: Initialization Phase
+    Zookeeper->>Zookeeper: Start coordination service
+    Note over Zookeeper: Listen on port 2181
+    end
+
+    rect rgb(220, 240, 230)
+    Note over Kafka,Zookeeper: Kafka Startup
+    Kafka->>Zookeeper: Register as broker
+    Zookeeper-->>Kafka: Registration confirmed
+    Kafka->>Kafka: Initialize partitions
+    Note over Kafka: Listen on port 9092
+    end
+
+    rect rgb(240, 230, 220)
+    Note over SchemaRegistry,Kafka: Schema Registry Startup
+    SchemaRegistry->>Kafka: Connect to bootstrap servers
+    Kafka-->>SchemaRegistry: Connection established
+    SchemaRegistry->>SchemaRegistry: Initialize schema store
+    Note over SchemaRegistry: Listen on port 8081
+    end
+
+    rect rgb(250, 240, 220)
+    Note over Client,Kafka: Client Operations
+    Client->>Kafka: Produce messages to 'orders' topic
+    Client->>Kafka: Consume messages from 'orders' topic
+    Client->>SchemaRegistry: Validate message schema (optional)
+    SchemaRegistry-->>Client: Schema validation result
+    end
+
+    Note over Client,Zookeeper: System ready for message processing

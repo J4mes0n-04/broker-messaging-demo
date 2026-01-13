@@ -1,0 +1,49 @@
+sequenceDiagram
+    participant Test as Test Runner
+    participant Producer as Producer Instance
+    participant Kafka as Kafka Broker
+    participant Consumer as Consumer Instance
+    participant Assert as Assertion
+
+    Note over Test,Assert: Integration Test: Message Flow
+
+    rect rgb(220, 200, 255)
+    Note over Test,Producer: Setup Phase
+    Test->>Producer: Create Producer(bootstrap.servers='localhost:9092')
+    Test->>Consumer: Create Consumer(group.id='test-group', auto.offset.reset='latest')
+    Consumer->>Kafka: subscribe(['orders'])
+    Kafka-->>Consumer: Subscription confirmed
+    end
+
+    rect rgb(200, 220, 255)
+    Note over Test,Kafka: Test Execution Phase
+    Test->>Test: Create test_msg={'order_id':999, 'amount':999.99}
+    Test->>Producer: produce('orders', value=json_test_msg)
+    Producer->>Kafka: Send message
+    Kafka-->>Producer: Stored in partition
+    Test->>Producer: flush()
+    Producer-->>Test: All messages sent
+    end
+
+    rect rgb(200, 255, 220)
+    Note over Test,Assert: Verification Phase
+    Test->>Consumer: poll(timeout=5.0)
+    Kafka-->>Consumer: Message retrieved
+    Consumer->>Consumer: json.loads(message)
+    Consumer-->>Test: Message received
+    
+    Test->>Assert: assertIsNotNone(msg)
+    Assert-->>Test: ✓ Message exists
+    
+    Test->>Assert: assertEqual(received['order_id'], 999)
+    Assert-->>Test: ✓ Order ID matches
+    end
+
+    rect rgb(255, 240, 200)
+    Note over Test,Consumer: Cleanup Phase
+    Test->>Consumer: close()
+    Consumer-->>Test: Consumer closed
+    Test->>Test: Test completed successfully
+    end
+
+    Note over Test: Integration Test PASSED

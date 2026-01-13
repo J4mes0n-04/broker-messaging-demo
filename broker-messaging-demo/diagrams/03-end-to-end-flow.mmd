@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant App as Application
+    participant Producer as Producer
+    participant Kafka as Kafka Broker<br/>(Zookeeper + Broker)
+    participant Consumer as Consumer
+    participant Handler as Message Handler
+
+    Note over App,Consumer: End-to-End Message Flow
+
+    rect rgb(200, 220, 255)
+    Note over Producer,Kafka: Phase 1: Message Production
+    App->>Producer: send_order(id, customer, amount)
+    Producer->>Kafka: produce('orders', key, json_value)
+    Note over Kafka: Message stored in partition
+    Kafka-->>Producer: Acknowledgment
+    Producer->>Producer: flush()
+    end
+
+    rect rgb(200, 255, 220)
+    Note over Kafka,Consumer: Phase 2: Message Consumption
+    Consumer->>Kafka: subscribe(['orders'])
+    Kafka-->>Consumer: Subscription confirmed
+    Consumer->>Kafka: poll(timeout=1)
+    Kafka-->>Consumer: Message retrieved
+    end
+
+    rect rgb(255, 240, 200)
+    Note over Consumer,Handler: Phase 3: Processing
+    Consumer->>Handler: json.loads(message)
+    Handler->>Handler: Parse order data
+    Handler->>Handler: Print order details
+    Consumer->>Kafka: commit(message)
+    Kafka-->>Consumer: Offset committed
+    end
+
+    Note over App,Consumer: Order processed successfully
