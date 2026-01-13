@@ -1,24 +1,24 @@
 sequenceDiagram
-    participant App as Application
-    participant Producer as Kafka Producer
-    participant Kafka as Kafka Broker
-    participant Callback as Delivery Callback
+    participant App as Приложение
+    participant Producer as Producer
+    participant Kafka as Kafka
+    participant Callback as Callback
 
     App->>Producer: send_order(order_id, customer_id, amount)
-    Note over App,Producer: Create order message with timestamp
+    Note over App,Producer: Создание сообщения с временной меткой
 
     Producer->>Kafka: produce(topic='orders', key=order_id, value=json)
-    Note over Kafka: Message enqueued in partition
+    Note over Kafka: Добавлено в партицию
 
-    Kafka-->>Callback: delivery_report (success/error)
-    Callback-->>Producer: Callback executed
+    Kafka-->>Callback: delivery_report (успех/ошибка)
+    Callback-->>Producer: Callback выполнен
     Producer->>Producer: poll(timeout=1)
-    Note over Producer: Wait for confirmation
+    Note over Producer: Ожидание подтверждения
 
-    Kafka-->>App: Message persisted in topic
+    Kafka-->>App: Сообщение сохранено в topic
 
     App->>Producer: flush()
-    Note over Producer: Wait for all messages to be delivered
-    Producer-->>App: All messages confirmed
+    Note over Producer: Ожидание доставки всех сообщений
+    Producer-->>App: Все сообщения подтверждены
 
-    Note over App: Sequence complete - order sent to Kafka
+    Note over App: Сообщение отправлено в Kafka

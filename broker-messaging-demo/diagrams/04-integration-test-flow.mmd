@@ -1,49 +1,50 @@
 sequenceDiagram
-    participant Test as Test Runner
-    participant Producer as Producer Instance
-    participant Kafka as Kafka Broker
-    participant Consumer as Consumer Instance
-    participant Assert as Assertion
+    participant Test as Запуск теста
+    participant Producer as Producer
+    participant Kafka as Kafka
+    participant Consumer as Consumer
+    participant Assert as TEST
 
-    Note over Test,Assert: Integration Test: Message Flow
+    Note over Test,Assert: Интеграционный тест: Поток сообщений
 
     rect rgb(220, 200, 255)
-    Note over Test,Producer: Setup Phase
-    Test->>Producer: Create Producer(bootstrap.servers='localhost:9092')
-    Test->>Consumer: Create Consumer(group.id='test-group', auto.offset.reset='latest')
+    Note over Test,Producer: Фаза инициализации
+    Test->>Producer: Создать Producer(bootstrap.servers='localhost:9092')
+    Test->>Consumer: Создать Consumer(group.id='test-group', auto.offset.reset='latest')
     Consumer->>Kafka: subscribe(['orders'])
-    Kafka-->>Consumer: Subscription confirmed
+    Kafka-->>Consumer: Подписка подтверждена
     end
 
     rect rgb(200, 220, 255)
-    Note over Test,Kafka: Test Execution Phase
-    Test->>Test: Create test_msg={'order_id':999, 'amount':999.99}
+    Note over Test,Kafka: Фаза выполнения теста
+    Test->>Test: Создать test_msg={'order_id':999, 'amount':999.99}
     Test->>Producer: produce('orders', value=json_test_msg)
-    Producer->>Kafka: Send message
-    Kafka-->>Producer: Stored in partition
+    Producer->>Kafka: Отправить сообщение
+    Kafka-->>Producer: Сохранено в партицию
     Test->>Producer: flush()
-    Producer-->>Test: All messages sent
+    Producer-->>Test: Все сообщения отправлены
     end
 
     rect rgb(200, 255, 220)
-    Note over Test,Assert: Verification Phase
+    Note over Test,Assert: Фаза проверки
     Test->>Consumer: poll(timeout=5.0)
-    Kafka-->>Consumer: Message retrieved
+    Kafka-->>Consumer: Сообщение получено
     Consumer->>Consumer: json.loads(message)
-    Consumer-->>Test: Message received
+    Consumer-->>Test: Сообщение получено
     
     Test->>Assert: assertIsNotNone(msg)
-    Assert-->>Test: ✓ Message exists
+    Assert-->>Test: ✓ Сообщение существует
     
     Test->>Assert: assertEqual(received['order_id'], 999)
-    Assert-->>Test: ✓ Order ID matches
+    Assert-->>Test: ✓ ID заказа совпадает
     end
 
     rect rgb(255, 240, 200)
-    Note over Test,Consumer: Cleanup Phase
+    Note over Test,Consumer: Фаза очистки
     Test->>Consumer: close()
-    Consumer-->>Test: Consumer closed
-    Test->>Test: Test completed successfully
+    Consumer-->>Test: Консьюмер закрыт
+    Test->>Test: Тест завершен успешно
     end
 
-    Note over Test: Integration Test PASSED
+    Note over Test: Интеграционный тест ПРОЙДЕН
+

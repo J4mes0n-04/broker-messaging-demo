@@ -1,33 +1,31 @@
 sequenceDiagram
-    participant Consumer as Kafka Consumer
-    participant Kafka as Kafka Broker
-    participant App as Application
-    participant CommitMgr as Commit Manager
+    participant Consumer as Consumer
+    participant Kafka as Kafka 
+    participant App as Приложение
+    participant CommitMgr as Менеджер Commit
+    
+    Consumer->>Kafka: Подписка на topic 'orders'
+    Kafka-->>Consumer: Подписка подтверждена
 
-    Note over Consumer: subscribe(['orders'])
-    Consumer->>Kafka: Subscribe to topic 'orders'
-    Kafka-->>Consumer: Subscription confirmed
-
-    loop Poll messages continuously
+    loop Непрерывный опрос сообщений
         Consumer->>Kafka: poll(timeout=1.0)
-        Note over Kafka: Wait for message (1 second)
         
-        alt Message available
-            Kafka-->>Consumer: msg received
-            Consumer->>App: Deserialize message (json.loads)
-            App->>App: Process order
-            Note over App: Extract order details
+        alt Сообщение получено
+            Kafka-->>Consumer: Сообщение получено
+            Consumer->>App: Десериализация (json.loads)
+            App->>App: Обработка заказа
+
             
             Consumer->>CommitMgr: commit(message=msg)
-            CommitMgr->>Kafka: Commit offset
-            Kafka-->>CommitMgr: Offset committed
-            CommitMgr-->>Consumer: Commit confirmed
+            CommitMgr->>Kafka: Commit смещения
+            Kafka-->>CommitMgr: Смещение зафиксировано
+            CommitMgr-->>Consumer: Commit подтвержден
             
-        else Timeout (no message)
+        else Timeout (нет сообщения)
             Kafka-->>Consumer: None (timeout)
-            Consumer->>Consumer: Continue polling
+            Consumer->>Consumer: Продолжить опрос
         end
     end
 
     Consumer->>Kafka: close()
-    Note over Consumer: Graceful shutdown
+    Note over Consumer: Завершение

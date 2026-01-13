@@ -1,36 +1,36 @@
 sequenceDiagram
-    participant App as Application
+    participant App as Приложение
     participant Producer as Producer
-    participant Kafka as Kafka Broker<br/>(Zookeeper + Broker)
+    participant Kafka as Kafka<br/>(Zookeeper + Брокер)
     participant Consumer as Consumer
-    participant Handler as Message Handler
+    participant Handler as Обработчик
 
-    Note over App,Consumer: End-to-End Message Flow
+    Note over App,Consumer: Сквозной поток данных
 
     rect rgb(200, 220, 255)
-    Note over Producer,Kafka: Phase 1: Message Production
+    Note over Producer,Kafka: Фаза 1: Создание сообщений
     App->>Producer: send_order(id, customer, amount)
     Producer->>Kafka: produce('orders', key, json_value)
-    Note over Kafka: Message stored in partition
-    Kafka-->>Producer: Acknowledgment
+    Note over Kafka: Сообщение сохранено в партицию
+    Kafka-->>Producer: Подтверждение
     Producer->>Producer: flush()
     end
 
     rect rgb(200, 255, 220)
-    Note over Kafka,Consumer: Phase 2: Message Consumption
+    Note over Kafka,Consumer: Фаза 2: Прием сообщений
     Consumer->>Kafka: subscribe(['orders'])
-    Kafka-->>Consumer: Subscription confirmed
+    Kafka-->>Consumer: Подписка подтверждена
     Consumer->>Kafka: poll(timeout=1)
-    Kafka-->>Consumer: Message retrieved
+    Kafka-->>Consumer: Сообщение получено
     end
 
     rect rgb(255, 240, 200)
-    Note over Consumer,Handler: Phase 3: Processing
+    Note over Consumer,Handler: Фаза 3: Обработка
     Consumer->>Handler: json.loads(message)
-    Handler->>Handler: Parse order data
-    Handler->>Handler: Print order details
+    Handler->>Handler: Разбор данных заказа
+    Handler->>Handler: Вывод деталей заказа
     Consumer->>Kafka: commit(message)
-    Kafka-->>Consumer: Offset committed
+    Kafka-->>Consumer: Смещение зафиксировано
     end
 
-    Note over App,Consumer: Order processed successfully
+    Note over App,Consumer: Заказ успешно обработан

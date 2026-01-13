@@ -1,39 +1,39 @@
 sequenceDiagram
-    participant Client as Client Application
-    participant SchemaRegistry as Schema Registry<br/>(Port: 8081)
-    participant Kafka as Kafka Broker<br/>(Port: 9092)
-    participant Zookeeper as Zookeeper<br/>(Port: 2181)
+    participant Client 
+    participant SchemaRegistry as Schema Registry<br/>(Порт: 8081)
+    participant Kafka as Kafka Брокер<br/>(Порт: 9092)
+    participant Zookeeper as Zookeeper<br/>(Порт: 2181)
 
-    Note over Client,Zookeeper: System Architecture & Initialization
+    Note over Client,Zookeeper: Архитектура системы и инициализация
 
     rect rgb(230, 240, 250)
-    Note over Zookeeper: Initialization Phase
-    Zookeeper->>Zookeeper: Start coordination service
-    Note over Zookeeper: Listen on port 2181
+    Note over Zookeeper: Фаза инициализации
+    Zookeeper->>Zookeeper: Запуск сервиса координации
+    Note over Zookeeper: Слушает порт 2181
     end
 
     rect rgb(220, 240, 230)
-    Note over Kafka,Zookeeper: Kafka Startup
-    Kafka->>Zookeeper: Register as broker
-    Zookeeper-->>Kafka: Registration confirmed
-    Kafka->>Kafka: Initialize partitions
-    Note over Kafka: Listen on port 9092
+    Note over Kafka,Zookeeper: Запуск Kafka
+    Kafka->>Zookeeper: Регистрация брокера
+    Zookeeper-->>Kafka: Регистрация подтверждена
+    Kafka->>Kafka: Инициализация партиций
+    Note over Kafka: Слушает порт 9092
     end
 
     rect rgb(240, 230, 220)
-    Note over SchemaRegistry,Kafka: Schema Registry Startup
-    SchemaRegistry->>Kafka: Connect to bootstrap servers
-    Kafka-->>SchemaRegistry: Connection established
-    SchemaRegistry->>SchemaRegistry: Initialize schema store
-    Note over SchemaRegistry: Listen on port 8081
+    Note over SchemaRegistry,Kafka: Запуск Schema Registry
+    SchemaRegistry->>Kafka: Подключение к bootstrap серверам
+    Kafka-->>SchemaRegistry: Соединение установлено
+    SchemaRegistry->>SchemaRegistry: Инициализация хранилища схем
+    Note over SchemaRegistry: Слушает порт 8081
     end
 
     rect rgb(250, 240, 220)
-    Note over Client,Kafka: Client Operations
-    Client->>Kafka: Produce messages to 'orders' topic
-    Client->>Kafka: Consume messages from 'orders' topic
-    Client->>SchemaRegistry: Validate message schema (optional)
-    SchemaRegistry-->>Client: Schema validation result
+    
+    Client->>Kafka: Отправить сообщения в topic 'orders'
+    Client->>Kafka: Получить сообщения из topic 'orders'
+    Client->>SchemaRegistry: Валидация схемы сообщения (опционально)
+    SchemaRegistry-->>Client: Результат валидации схемы
     end
 
-    Note over Client,Zookeeper: System ready for message processing
+    Note over Client,Zookeeper: Система готова к обработке сообщений
